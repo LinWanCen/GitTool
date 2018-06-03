@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Class-Path: lib/slf4j-api-1.7.12.jar lib/org.eclipse.jgit_4.1.1.201511
+ 131810-r.jar
+Main-Class: linWanCheng.gitTool.Main
+

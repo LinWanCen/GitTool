@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact name="GitTool:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/GitTool_jar</output-path>
+    <root id="root">
+      <element id="archive" name="GitTool.jar">
+        <element id="module-output" name="GitTool" />
+      </element>
+      <element id="directory" name="lib">
+        <element id="library" level="project" name="lib" />
+      </element>
+      <element id="file-copy" path="$PROJECT_DIR$/WinRun.bat" />
+    </root>
+  </artifact>
+</component>
