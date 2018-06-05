@@ -23,9 +23,10 @@ import java.util.*;
 public class GitTool {
     private static final Logger loggger = LoggerFactory.getLogger(GitTool.class);
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    public static final String NO_FILE = "NO_FILE";
+    public static final String IS_NOT_GIT = "IS_NOT_GIT";
 
     public static final String FILE_PATH = "filePath";
-    public static final String ERROR_MESSAGE = "errorMessage";
 
     // blame
 
@@ -73,7 +74,8 @@ public class GitTool {
      * @return a <code>List&lt;LinkedHashMap&lt;String, String&gt;&gt;</code> for logInfo
      * @see linWanCheng.gitTool.GitTool#logInfo(String, Set)
      */
-    public List<Map<String, String>> logInfoMultiLine(final String multiPathAndLine, final Set<String> param) {
+    public List<Map<String, String>> logInfoMultiLine(
+            final String multiPathAndLine, final Set<String> param) {
         List<Map<String, String>> list = new ArrayList<>();
         String[] files = {multiPathAndLine};
         if (multiPathAndLine.contains("\n")) {
@@ -86,7 +88,9 @@ public class GitTool {
             } catch (Exception e) {
                 loggger.error(i + " " + files[i], e);
                 Map<String, String> logInfoMap = new LinkedHashMap<>();
-                logInfoMap.put(ERROR_MESSAGE, e.getLocalizedMessage());
+                for (String p : param) {
+                    logInfoMap.put(p, e.getLocalizedMessage());
+                }
                 list.add(logInfoMap);
             }
         }
@@ -119,23 +123,30 @@ public class GitTool {
      * <code/></strong>
      * @throws GitAPIException is not git file
      */
-    public Map<String, String> logInfo(final String pathAndLine, final Set<String> param) throws GitAPIException {
+    public Map<String, String> logInfo(final String pathAndLine, final Set<String> param)
+            throws GitAPIException {
         Map<String, String> logInfoMap = new LinkedHashMap<>();
         String filePath = pathAndLine.trim();
         filePath = filePath.replaceAll("\"", "");
         // like C:... ?
-        if (':' == filePath.charAt(1)) {
+        if (filePath.length() > 2 && ':' == filePath.charAt(1)) {
             filePath = filePath.substring(gitPath.length() + 1);
         }
         filePath = filePath.replaceAll("\\\\", "/");
         if ('/' == filePath.charAt(0)) {
             filePath = filePath.substring(1);
         }
+        if (!new File(gitPath,filePath).exists()) {
+            for (String s : param) {
+                logInfoMap.put(s, NO_FILE);
+            }
+            return logInfoMap;
+        }
         Integer line = null;
         if (filePath.contains(":")) {
             String[] split = filePath.split(":");
             filePath = split[0];
-            if (split[1].length() > 0) {
+            if (filePath.length() > 1 && split[1].length() > 0) {
                 // is not int Exception
                 line = Integer.parseInt(split[1]);
             }
@@ -150,7 +161,12 @@ public class GitTool {
             blameCommand.setTextComparator(RawTextComparator.WS_IGNORE_ALL);
             // GitAPIException
             BlameResult blame = blameCommand.setFilePath(filePath).call();
-            if (blame != null) {
+            if (blame == null) {
+                for (String s : param) {
+                    logInfoMap.put(s, IS_NOT_GIT);
+                }
+                return logInfoMap;
+            } else {
                 if (line != null) {
                     PersonIdent author = blame.getSourceAuthor(line - 1);
                     logInfoMap.put(BLAME_LINE, String.valueOf(line));
@@ -172,7 +188,7 @@ public class GitTool {
                 }
             }
         }
-        //endregion blame
+        // endregion blame
 
         // region log
         if (param == null
@@ -184,6 +200,12 @@ public class GitTool {
             // GitAPIException
             Iterator<RevCommit> revCommitIterator = logCommand.addPath(filePath).call().iterator();
             Map<String, Integer> nameCommitCount = new LinkedHashMap<>();
+            if (!revCommitIterator.hasNext()) {
+                for (String s : param) {
+                    logInfoMap.put(s, IS_NOT_GIT);
+                }
+                return logInfoMap;
+            }
             while (revCommitIterator.hasNext()) {
                 RevCommit revCommit = revCommitIterator.next();
                 // have not NO_IGNORE_MERGE
@@ -210,7 +232,7 @@ public class GitTool {
                 }
             }
         }
-        //endregion log
+        // endregion log
         return logInfoMap;
     }
 
@@ -233,7 +255,7 @@ public class GitTool {
         }
         return maxKey;
     }
-    //endregion logInfo
+    // endregion logInfo
 
     public static void main(String[] args) throws Exception {
         GitTool gitTool = new GitTool();

@@ -32,7 +32,8 @@ public class Main extends Application {
         initComboBox(controller.config, FileIO.CONFIG, new String[]{
                 "lastName, lastTime, blameName, blameTime, 最后修改",
                 "moreLineName, nameLineCount, 行最多",
-                "moreCommitName, nameCommitCount, 提交最多"
+                "moreCommitName, nameCommitCount, 提交最多",
+                "filePath, 其他信息"
         });
         initComboBox(controller.separator, FileIO.SEPARATOR, new String[]{"\\t", ","});
         List<String> list = controller.map.get(FileIO.FILE_PATH);
